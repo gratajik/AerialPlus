@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -24,27 +26,39 @@ namespace Aerial.Controls
 
         public void BuildTree(List<Asset> movies, List<string> selectedEntities)
         {
+            Trace.WriteLine("BuildTree()");
+
+            var image = Image.FromFile(@"d:\ChinaFlag.png");
+
+            //ImageList = new ImageList();
+            //ImageList.ImageSize = new Size(50, 50);
+            //this.ImageList.Images.Add("china", image);
+
+
             updatingChecked = true;
             TreeNode root = new TreeNode(movies[0].accessibilityLabel);
             Nodes.Add(root);
             Movies = new Dictionary<string, Asset>();
             bool allChecked = true;
-            foreach (var m in movies)
+            foreach (var movie in movies)
             {
-                if (m.accessibilityLabel != root.Text)
+                if (movie.accessibilityLabel != root.Text)
                 {
                     // checked root
                     if (allChecked) root.Checked = true;
                     // new root
-                    root = new TreeNode(m.accessibilityLabel);
+                    root = new TreeNode(movie.accessibilityLabel);
                     Nodes.Add(root);
                 }
                 // add node
-                var newNode = new TreeNode(m.TimeAndIdNumbered());
+                var newNode = new TreeNode(movie.TimeAndIdNumbered());
+               // newNode.SelectedImageKey ="china";
+                
                 root.Nodes.Add(newNode);
                 newNode.Checked = selectedEntities.Contains(newNode.FullPath);
                 allChecked = allChecked && newNode.Checked;
-                Movies.Add(root.Nodes[root.Nodes.Count - 1].FullPath, m);
+                Trace.WriteLine($"  Adding {movie.id}, {movie.ShortName()}, {movie.ToFullName()}");
+                Movies.Add(root.Nodes[root.Nodes.Count - 1].FullPath, movie);
             }
 
             ExpandAll();

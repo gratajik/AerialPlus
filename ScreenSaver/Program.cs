@@ -1,9 +1,13 @@
-﻿using ScreenSaver;
+﻿using Newtonsoft.Json.Linq;
+using ScreenSaver;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace Aerial
 {
@@ -38,12 +42,18 @@ namespace Aerial
                 }
             };
 
+            checkAndActOnNewVersion();
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            Caching.Setup();
+                        Caching.Setup();
 
-
+            // Args 
+            //  ScreenSaver - Show the Settings dialog box.
+            //  ScreenSaver / c - Show the Settings dialog box, modal to the foreground window.
+            //  ScreenSaver / p < HWND > -Preview Screen Saver as child of window<HWND>.
+            //  ScreenSaver / s - Run the Screen Saver.
             if (args.Length > 0)
             {
                 string firstArgument = args[0].ToLower().Trim();
@@ -58,7 +68,7 @@ namespace Aerial
                 }
                 else if (args.Length > 1)
                     secondArgument = args[1];
-                
+
                 if (firstArgument == "/c")           // Configuration mode
                 {
                     var settings = new SettingsForm();
@@ -73,7 +83,7 @@ namespace Aerial
                             "ScreenSaver", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         return;
                     }
-                    
+
                     IntPtr previewWndHandle = new IntPtr(long.Parse(secondArgument));
                     Application.Run(new ScreenSaverForm(previewWndHandle));
                 }
@@ -81,7 +91,8 @@ namespace Aerial
                 {
                     ShowScreenSaver();
                     Application.Run();
-                }  else if (firstArgument == "/w") // if executable, windowed mode.
+                }
+                else if (firstArgument == "/w") // if executable, windowed mode.
                 {
                     Application.Run(new ScreenSaverForm(WindowMode: true));
                 }
@@ -92,7 +103,7 @@ namespace Aerial
                         MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
-            else    
+            else
             {
                 if (System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName.EndsWith("exe")) // treat like /w
                 {
@@ -102,7 +113,66 @@ namespace Aerial
                 {
                     Application.Run(new SettingsForm());
                 }
-            }            
+            }
+        }
+
+        static void checkAndActOnNewVersion()
+        {
+            try
+            {
+                var settings = new RegSettings();
+                if (settings.CheckForNewVersion)
+                {
+                    var reg = new RegSettings();
+                    var versionURL = reg.VersionURL;
+                    var json = File.ReadAllText(versionURL);
+                    dynamic versionInfo = JObject.Parse(json);
+
+                    int versionInfoVersion = versionInfo.version;
+                    string versionInfoDecription = versionInfo.versionDescription;
+                    string versionInfoDate = versionInfo.versonDate;
+                    string versionInfoDisplay = versionInfo.versionDisplay;
+
+                    if (reg.LastVersionChecked < versionInfoVersion)
+                    {
+                        reg.LastVersionChecked = versionInfoVersion;
+                        //
+                        // As thi is a screen saver, we REALLY don't want to not come up if there's a new verison
+                        // so spawn thread to ask
+                        //
+                        Task.Factory.StartNew(() =>
+                        {
+                            var content = $"A new version of AerialPlus is available.\n\n";
+                            content += $"    Description: {versionInfoDecription}\n";
+                            content += $"    Released on: {versionInfoDate}\n\n";
+                            content += $"The new version is {versionInfoDisplay} (you are running version {AerialGlobalVars.VersionDisplay})\n\n";
+                            content += $"Would  you like to go download the new version?";
+
+                            DialogResult dialogResult = MessageBox.Show(content, "New version detected", MessageBoxButtons.YesNo);
+
+                            if (dialogResult == DialogResult.Yes)
+                            {
+                                reg.SaveSettings();
+                                Process.Start("http://ratajik.com/AerialPlus");
+
+                                // 
+                                // Don't want to have the user exit for install to work (and don't want to deal in NSIS)
+                                //
+                                Application.Exit();
+                            } 
+                            else
+                            {
+                                reg.SaveSettings();
+                            }
+                        });
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+
         }
 
         static byte[] StreamToBytes(Stream input)

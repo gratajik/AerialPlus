@@ -1,0 +1,19 @@
+﻿
+App
+
+- do a init dialog on first run
+- If version check or init dialog are up and in saver mode, don't exit on mouse move/click
+- On version check, and a check box to not check for new versions
+- remove newtonsoft (because we don't want to have to instal the stupid @!#!@#@ assembly to the windows dir)
+- see if the image select on settings could be better 
+- figure out images on settings
+- dedup video
+- add day/night/other to ones that don't have it (figure out way to not break import!?)
+- sign exe https://stackoverflow.com/questions/28161420/why-do-i-suddenly-get-the-not-commonly-downloaded-warning-in-chrome-after-clic
+- figure out download block (miigh be able to put in domain root?) https://stackoverflow.com/questions/12231581/program-download-ie-chrome-is-not-commonly-downloaded-and-could-be-dangerou
+- create batch file to make the web part slightly less annoying
+- fix getLatestReleaseURI on settings
+Web 
+- Make download much more visible
+- Add verison info to download
+- Add link from main domain (ratajik.com)

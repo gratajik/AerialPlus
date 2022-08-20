@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -17,15 +18,20 @@ namespace Aerial
         public static List<Asset> GetMovies()
         {
             var urls = GetAllEntries();
-
+             
             return FilterEntries(urls);
         }
         public static List<Asset> GetAllMovies()
         {
+            Trace.WriteLine("GetAllMoves()");
             //if no Entries, just return an empty list
             if (GetAllEntries() == null) { return new List<Asset>(); }
 
-            return GetAllEntries().SelectMany(s => s.assets).ToList();
+            return GetAllEntries().SelectMany(s =>
+            {
+                Trace.WriteLine($"  Flattinging {s.id}.  Count {s.assets.Count()}");
+                return s.assets;
+            }).ToList();
         }
 
         private static List<Asset> FilterEntries(IdAsset[] urls)
@@ -83,6 +89,7 @@ namespace Aerial
             }
             catch (ArgumentException e)
             {
+                Trace.TraceInformation(e.Message);
                 //the passed in entities document is invalid.
                 return null;
             }
@@ -145,7 +152,7 @@ namespace Aerial
 
         [NonSerialized]
         internal int numeric = 0;
-        
+       
         public override string ToString()
         {
             return accessibilityLabel + (numeric == 0 ? "" : " " + numeric) + " " + timeOfDay + "";
@@ -165,7 +172,7 @@ namespace Aerial
 
         public string TimeAndIdNumbered()
         {
-            return timeOfDay + (numeric == 0 ? "" : " " + numeric) + " (" + id + ")";
+            return timeOfDay + (numeric == 0 ? "" : " " + numeric) + " (" + id + ")";           
         }
 
         public int CompareTo(Asset other)

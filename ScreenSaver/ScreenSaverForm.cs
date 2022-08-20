@@ -62,7 +62,7 @@ namespace ScreenSaver
             SetStyle(ControlStyles.Opaque, true);
             this.BackColor = Color.Transparent;
             windowMode = WindowMode;
-            MaximizeVideo();
+            MaximizeVideo(WindowMode);
 
             ShowButtons();
         }
@@ -115,14 +115,6 @@ namespace ScreenSaver
             if (showVideo) // testing preview video speed didn't work well && !previewMode
             {
                 Movies = AerialContext.GetMovies();
-
-#if DEBUG && false
-                Movies = new List<Asset>
-                {
-                    new Asset { url = @"http://18292-presscdn-0-89.pagely.netdna-cdn.com/wp-content/uploads/2015/07/stripe-checkout.mp4?_=1" },
-                    new Asset {url = @"http://18292-presscdn-0-89.pagely.netdna-cdn.com/wp-content/uploads/2015/07/stripe-shake.mp4?_=3" },
-                };
-#endif
 
                 NextVideoTimer.Tick += NextVideoTimer_Tick;
                 NextVideoTimer.Interval = 1000;
@@ -291,8 +283,15 @@ namespace ScreenSaver
         #endregion
 
         #region Video player
-        private void MaximizeVideo()
+        private void MaximizeVideo(bool WindowMode = false)
         {
+            if (WindowMode)
+            {
+                this.WindowState = FormWindowState.Normal;
+                this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+                this.Bounds = Screen.PrimaryScreen.Bounds;
+            }
+
             var screenArea = Screen.FromControl(this).WorkingArea;
             var videoSize = this.Size;
             if (screenArea.Size.Width > videoSize.Width && screenArea.Height > videoSize.Height)
@@ -355,17 +354,24 @@ namespace ScreenSaver
 
         private void NextVideoTimer_Tick(object sender, EventArgs e)
         {
-            // Trace.WriteLine("Timer: " + state);
-            var state = this.player.playState;
-            if (state == WMPLib.WMPPlayState.wmppsReady ||
-                state == WMPLib.WMPPlayState.wmppsUndefined ||
-                state == WMPLib.WMPPlayState.wmppsStopped)
+            try
             {
-                SetNextVideo();
+                // Trace.WriteLine("Timer: " + state);
+                var state = this.player.playState;
+                if (state == WMPLib.WMPPlayState.wmppsReady ||
+                    state == WMPLib.WMPPlayState.wmppsUndefined ||
+                    state == WMPLib.WMPPlayState.wmppsStopped)
+                {
+                    SetNextVideo();
+                }
+                if (lastInteraction.AddSeconds(1) < DateTime.Now)
+                {
+                    ShowButtons(false);
+                }
             }
-            if (lastInteraction.AddSeconds(1) < DateTime.Now)
+            catch
             {
-                ShowButtons(false);
+
             }
         }
 

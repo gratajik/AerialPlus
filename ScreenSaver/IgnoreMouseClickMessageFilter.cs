@@ -45,11 +45,18 @@ namespace ScreenSaver
         }
 
         private bool WasNotClickedOnTarget(Control parent, Control target)
-        {
+        {            
             Trace.WriteLine("WasNotClickedOnTarget()");
-            Control clickedOn = parent.GetChildAtPoint(Cursor.Position);
-            if (IsNull(clickedOn)) return true;
-            if (AreEqual(clickedOn, target)) return false;
+            try
+            {
+                Control clickedOn = parent.GetChildAtPoint(Cursor.Position);
+                if (IsNull(clickedOn)) return true;
+                if (AreEqual(clickedOn, target)) return false;
+            }
+            catch
+            {
+
+            }
             return true;
         }
 

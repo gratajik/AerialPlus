@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Net;
 using System.Web.Script.Serialization;
+using System.Reflection;
 
 namespace ScreenSaver
 {
@@ -33,6 +34,7 @@ namespace ScreenSaver
             var settings = new RegSettings();
             //chkDifferentMonitorMovies.Checked = settings.DifferentMoviesOnDual;
             chkUseTimeOfDay.Checked = settings.UseTimeOfDay;
+            chkCheckForNewVersion.Checked = settings.CheckForNewVersion;
             //chkMultiscreenDisabled.Checked = settings.MultiscreenDisabled;
             chkCacheVideos.Checked = settings.CacheVideos;
             cbMultiScreenMode.DataBindEnum(settings.MultiMonitorMode);
@@ -48,7 +50,7 @@ namespace ScreenSaver
 
             if (String.IsNullOrEmpty(settings.JsonURL))
             {
-                changeVideoSourceText.Text = AerialGlobalVars.appleVideosURI;
+                changeVideoSourceText.Text = AerialGlobalVars.ratajikVideosURI;
             } else
             {
                 changeVideoSourceText.Text = settings.JsonURL;
@@ -154,6 +156,7 @@ namespace ScreenSaver
             var settings = new RegSettings();
             settings.MultiMonitorMode = (RegSettings.MultiMonitorModeEnum)cbMultiScreenMode.SelectedValue;
             settings.UseTimeOfDay = chkUseTimeOfDay.Checked;
+            settings.CheckForNewVersion = chkCheckForNewVersion.Checked;            
             settings.CacheVideos = chkCacheVideos.Checked;
 
             string oldCacheDirectory = settings.CacheLocation;
@@ -228,42 +231,55 @@ namespace ScreenSaver
 
         private string getLatestReleaseURI()
         {
-            string releaseData = "";
+            //string releaseData = "";
 
-            using (WebClient w = new WebClient())
-            {
-                w.Headers.Add("User-Agent: Other");  //github will give a 403 if we don't define the user agent
-                try
-                {
-                    releaseData = w.DownloadString(AerialGlobalVars.githubLatestReleaseDetails);
-                } catch (WebException)
-                {
-                    //if we have an error reading the release data, just use the standard URL for all releases (AKA do nothing here)
-                }
-            }
-            var deserializedData = new JavaScriptSerializer().Deserialize<dynamic>(releaseData);
+            //using (WebClient w = new WebClient())
+            //{
+            //    w.Headers.Add("User-Agent: Other");  //github will give a 403 if we don't define the user agent
+            //    try
+            //    {
+            //        releaseData = w.DownloadString(AerialGlobalVars.githubLatestReleaseDetails);
+            //    } catch (WebException)
+            //    {
+            //        //if we have an error reading the release data, just use the standard URL for all releases (AKA do nothing here)
+            //    }
+            //}
+            //var deserializedData = new JavaScriptSerializer().Deserialize<dynamic>(releaseData);
 
-            string githubURL = "";
+            //string githubURL = "";
 
-            if (String.IsNullOrEmpty(releaseData))
-            {
-                githubURL = AerialGlobalVars.githubAllReleases; //URL for all releases
-            } else
-            {
-                githubURL = deserializedData["html_url"];
-            }
+            //if (String.IsNullOrEmpty(releaseData))
+            //{
+            //    githubURL = AerialGlobalVars.githubAllReleases; //URL for all releases
+            //} else
+            //{
+            //    githubURL = deserializedData["html_url"];
+            //}
+            //return githubURL;
+            //@@TODO - release management 
+            return "http://ratajik.com/AerialPlus";
 
-            return githubURL;
         }
 
-        private void videoSourceResetButton_Click(object sender, EventArgs e)
+        private void btnAppleSource(object sender, EventArgs e)
         {
             changeVideoSourceText.Text = AerialGlobalVars.appleVideosURI;
         }
 
-        private void SetToFourK_btn_Click(object sender, EventArgs e)
+        private void btn4KSource(object sender, EventArgs e)
         {
             changeVideoSourceText.Text = AerialGlobalVars.applefourKVideoURI;
+        }
+
+        private void btnRatajikComboSource(object sender, EventArgs e)
+        {
+            changeVideoSourceText.Text = AerialGlobalVars.ratajikVideosURI;
+        }
+
+        private void btnSourceButton_Local_Click(object sender, EventArgs e)
+        {
+            var jsonLocal = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\" + "AerialPlus.json";
+            changeVideoSourceText.Text = jsonLocal;
         }
 
         private void fullDownloadBtn_Click(object sender, EventArgs e)
@@ -297,5 +313,25 @@ namespace ScreenSaver
                 Trace.WriteLine("Error downloading all videos: " + err.ToString());
             }
         }
+
+        //private void linkLabel1_Click(object sender, EventArgs e)
+        //{
+        //    System.Diagnostics.Process.Start("https://github.com/cDima/Aerial");
+        //}
+
+        private void linkRatajk_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("http://ratajik.com/AerialPlus");
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("https://github.com/cDima/Aerial");
+        }
+
+        private void linkStationRipper_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("http://www.stationripper.com");
+        }        
     }
 }
